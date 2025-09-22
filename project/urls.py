@@ -1,6 +1,6 @@
 from django.urls import path, include
 from rest_framework import routers
-from hermes_app import views
+from app import views
 
 router = routers.DefaultRouter()
 router.register(r'datasources', views.DataSourceViewSet)

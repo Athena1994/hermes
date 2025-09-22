@@ -12,16 +12,16 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.staticfiles',
     'rest_framework',
-    'hermes_app',
+    'app',
 ]
 
 MIDDLEWARE = []
 
-ROOT_URLCONF = 'hermes_project.urls'
+ROOT_URLCONF = 'project.urls'
 
 TEMPLATES = []
 
-WSGI_APPLICATION = 'hermes_project.wsgi.application'
+WSGI_APPLICATION = 'project.wsgi.application'
 
 DATABASES = {
     'default': {
