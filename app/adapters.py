@@ -44,28 +44,28 @@ class CSVAdapter(BaseAdapter):
                 }
 
 
-    def get_adapter_for_datasource(datasource: Union[Dict[str, Any], Any]) -> BaseAdapter:
-        """Return an adapter instance for a DataSource model or dict-like with 'type' and 'config'.
+def get_adapter_for_datasource(datasource: Union[Dict[str, Any], Any]) -> BaseAdapter:
+    """Return an adapter instance for a DataSource model or dict-like with 'type' and 'config'.
 
-        datasource: can be a Django model instance with .type and .config (JSONField), or a dict
-        with keys 'type' and 'config'.
-        """
-        ds_type = getattr(datasource, 'type', None) or (datasource.get('type') if isinstance(datasource, dict) else None)
-        config = getattr(datasource, 'config', None) or (datasource.get('config') if isinstance(datasource, dict) else {})
+    datasource: can be a Django model instance with .type and .config (JSONField), or a dict
+    with keys 'type' and 'config'.
+    """
+    ds_type = getattr(datasource, 'type', None) or (datasource.get('type') if isinstance(datasource, dict) else None)
+    config = getattr(datasource, 'config', None) or (datasource.get('config') if isinstance(datasource, dict) else {})
 
-        if ds_type == 'csv':
-            path = config.get('path')
-            return CSVAdapter(path=path, timezone=config.get('timezone', 'UTC'))
+    if ds_type == 'csv':
+        path = config.get('path')
+        return CSVAdapter(path=path, timezone=config.get('timezone', 'UTC'))
 
-        # Placeholder for web adapters or others
-        class WebAdapter(BaseAdapter):
-            def __init__(self, cfg: Dict[str, Any]):
-                self.cfg = cfg
+    # Placeholder for web adapters or others
+    class WebAdapter(BaseAdapter):
+        def __init__(self, cfg: Dict[str, Any]):
+            self.cfg = cfg
 
-            def list_symbols(self) -> Iterator[Dict[str, Any]]:
-                return iter([])
+        def list_symbols(self) -> Iterator[Dict[str, Any]]:
+            return iter([])
 
-            def fetch_ohlc(self, symbol: str, start: Optional[datetime] = None, end: Optional[datetime] = None) -> Iterator[Dict[str, Any]]:
-                raise NotImplementedError('WebAdapter not implemented')
+        def fetch_ohlc(self, symbol: str, start: Optional[datetime] = None, end: Optional[datetime] = None) -> Iterator[Dict[str, Any]]:
+            raise NotImplementedError('WebAdapter not implemented')
 
-        return WebAdapter(config)
+    return WebAdapter(config)
