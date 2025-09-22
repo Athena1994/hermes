@@ -2,9 +2,9 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from rest_framework import viewsets, status
 from rest_framework.response import Response
+from rest_framework.request import Request
 from rest_framework.decorators import action
 from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404
 from django.utils.dateparse import parse_datetime
 from django.db.models import Q
 
@@ -23,7 +23,7 @@ class StockViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = StockSerializer
 
     @action(detail=False, methods=['get'])
-    def by_symbol(self, request) -> Response:
+    def by_symbol(self, request: Request) -> Response:
         symbol = request.query_params.get('symbol')
         if not symbol:
             return Response({'detail': 'symbol query param required'}, status=status.HTTP_400_BAD_REQUEST)
@@ -41,14 +41,14 @@ class OHLCRangeAPIView(APIView):
       start, end (optional) - ISO datetimes
     """
 
-    def get(self, request, format=None) -> Response:
-        symbol: Optional[str] = request.query_params.get('symbol')
+    def get(self, request: Request, format: str = None) -> Response:
+        symbol = request.query_params.get('symbol')
         if not symbol:
             return Response({'detail': 'symbol is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        datasource_q: Optional[str] = request.query_params.get('datasource')
-        start: Optional[str] = request.query_params.get('start')
-        end: Optional[str] = request.query_params.get('end')
+        datasource_q = request.query_params.get('datasource')
+        start = request.query_params.get('start')
+        end = request.query_params.get('end')
 
         start_dt = parse_datetime(start) if start else None
         end_dt = parse_datetime(end) if end else None

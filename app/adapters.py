@@ -11,7 +11,8 @@ class BaseAdapter(ABC):
         """Return iterable of {symbol, name} offered by this datasource."""
 
     @abstractmethod
-    def fetch_ohlc(self, symbol: str, start: Optional[datetime] = None, end: Optional[datetime] = None) -> Iterator[Dict[str, Any]]:
+    def fetch_ohlc(self, symbol: str, 
+                   start: Optional[datetime] = None, end: Optional[datetime] = None) -> Iterator[Dict[str, Any]]:
         """Yield OHLC rows as dicts: {timestamp, open, high, low, close, volume} """
 
 
@@ -49,8 +50,8 @@ class CSVAdapter(BaseAdapter):
         datasource: can be a Django model instance with .type and .config (JSONField), or a dict
         with keys 'type' and 'config'.
         """
-        ds_type: Optional[str] = getattr(datasource, 'type', None) or (datasource.get('type') if isinstance(datasource, dict) else None)
-        config: Dict[str, Any] = getattr(datasource, 'config', None) or (datasource.get('config') if isinstance(datasource, dict) else {})
+        ds_type = getattr(datasource, 'type', None) or (datasource.get('type') if isinstance(datasource, dict) else None)
+        config = getattr(datasource, 'config', None) or (datasource.get('config') if isinstance(datasource, dict) else {})
 
         if ds_type == 'csv':
             path = config.get('path')
