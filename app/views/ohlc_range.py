@@ -1,35 +1,16 @@
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, List
 
-from rest_framework import viewsets, status
 from rest_framework.response import Response
 from rest_framework.request import Request
-from rest_framework.decorators import action
+from rest_framework import status
 from rest_framework.views import APIView
 from django.utils.dateparse import parse_datetime
 from django.db.models import Q
 
-from .models import DataSource, Stock, OHLC
-from .serializers import DataSourceSerializer, StockSerializer, OHLCSimpleSerializer
-from .adapters.base_adapter import get_adapter_for_datasource, BaseAdapter
-
-
-class DataSourceViewSet(viewsets.ModelViewSet):
-    queryset = DataSource.objects.all()
-    serializer_class = DataSourceSerializer
-
-
-class StockViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Stock.objects.select_related('datasource').all()
-    serializer_class = StockSerializer
-
-    @action(detail=False, methods=['get'])
-    def by_symbol(self, request: Request) -> Response:
-        symbol = request.query_params.get('symbol')
-        if not symbol:
-            return Response({'detail': 'symbol query param required'}, status=status.HTTP_400_BAD_REQUEST)
-        stocks = self.queryset.filter(symbol__iexact=symbol)
-        serializer = self.get_serializer(stocks, many=True)
-        return Response(serializer.data)
+from app.adapters.base_adapter import BaseAdapter
+from app.adapters.factory import get_adapter_for_datasource
+from app.models import OHLC, DataSource, Stock
+from app.serializers import OHLCSimpleSerializer
 
 
 class OHLCRangeAPIView(APIView):
@@ -39,6 +20,7 @@ class OHLCRangeAPIView(APIView):
       symbol (required) - stock symbol
       datasource (optional) - datasource name or id
       start, end (optional) - ISO datetimes
+    """
 
     def get(self, request: Request, format: str = None) -> Response:
         symbol = request.query_params.get('symbol')
