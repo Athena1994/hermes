@@ -1,6 +1,15 @@
+from dataclasses import dataclass, field
 from django.db import models
-from typing import Any
+from typing import Any, Set
 
+
+@dataclass(frozen=True)
+class Symbol:
+    """Core domain entity representing a tradable symbol."""
+    symbol: str           # Unique identifier, e.g., "AAPL"
+    name: str             # Human-readable name
+    periods: Set[str]     # Available timeframes, e.g., {"1m", "5m", "1d"}
+    metadata: dict[str, Any] = field(default_factory=dict)
 
 class DataSource(models.Model):
     # type: 'web' or 'csv' or custom
