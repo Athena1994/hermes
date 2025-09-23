@@ -1,4 +1,5 @@
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
+from dataclasses import dataclass
 
 from rest_framework.response import Response
 from rest_framework.request import Request
@@ -7,10 +8,33 @@ from rest_framework.views import APIView
 from django.utils.dateparse import parse_datetime
 from django.db.models import Q
 
-from app.adapters.base_adapter import BaseAdapter
+from app.adapters.base_adapter import BaseAdapter, Period
 from app.adapters.factory import get_adapter_for_datasource
-from app.models import OHLC, DataSource, Stock
-from app.serializers import OHLCSimpleSerializer
+from app.models import DataSource, Stock
+
+
+@dataclass
+class OHLCFilter:
+    symbol: Optional[str] = None
+    datasource: Optional[str] = None
+    start: Optional[Any] = None
+    end: Optional[Any] = None
+    period: Optional[Period | str] = None
+    meta: Optional[Dict[str, Any]] = None
+
+    @classmethod
+    def from_request(cls, request: Request) -> 'OHLCFilter':
+        qp = request.query_params
+        symbol = qp.get('symbol')
+        datasource = qp.get('datasource')
+        start_raw = qp.get('start')
+        end_raw = qp.get('end')
+        meta = qp.get('meta')
+
+        start_dt = parse_datetime(start_raw) if start_raw else None
+        end_dt = parse_datetime(end_raw) if end_raw else None
+
+        return cls(symbol, datasource, start_dt, end_dt, meta)
 
 
 class OHLCRangeAPIView(APIView):
@@ -22,71 +46,45 @@ class OHLCRangeAPIView(APIView):
       start, end (optional) - ISO datetimes
     """
 
-    def get(self, request: Request, format: str = None) -> Response:
-        symbol = request.query_params.get('symbol')
-        if not symbol:
-            return Response({'detail': 'symbol is required'}, status=status.HTTP_400_BAD_REQUEST)
-    
-        datasource_q = request.query_params.get('datasource')
-        start = request.query_params.get('start')
-        end = request.query_params.get('end')
+    def get(self, request: Request) -> Response:
+        # parse filters from request
+        filters = OHLCFilter.from_request(request)
+        if not filters.symbol:
+            return Response({'detail': 'symbol is required'}, 
+                            status=status.HTTP_400_BAD_REQUEST)
+        if not filters.datasource:
+            return Response({'detail': 'datsource is required'}, 
+                            status=status.HTTP_400_BAD_REQUEST)
 
-        start_dt = parse_datetime(start) if start else None
-        end_dt = parse_datetime(end) if end else None
+        # get datasource
+        try:
+            datasource = DataSource.objects.get(
+                Q(id=int(filters.datasource)) 
+                | Q(name=filters.datasource))
+        except Exception:
+            return Response({'detail': 'datasource not found'}, 
+                            status=status.HTTP_404_NOT_FOUND)
 
-        # If a datasource filter is provided, prefer that. Otherwise, try to find configured stocks.
-        qs = Stock.objects.filter(symbol__iexact=symbol)
-        ds = None
-        if datasource_q:
-            # allow numeric pk or name
-            try:
-                ds = DataSource.objects.get(Q(id=int(datasource_q)) | Q(name=datasource_q))
-            except Exception:
-                return Response({'detail': 'datasource not found'}, status=status.HTTP_404_NOT_FOUND)
-            stocks = qs.filter(datasource=ds)
+        # get stock object
+        stock = Stock.objects.filter(symbol__iexact=filters.symbol,
+                                     datasource=datasource)
+        if not stock.exists():
+            return Response({'detail': 'symbol not found in datasource'}, 
+                            status=status.HTTP_404_NOT_FOUND)
+
+        # get adapter
+        adapter = get_adapter_for_datasource(datasource)
+
+
+        # fetch OHLC data
+        ohlc_data = list(adapter.fetch_ohlc(
+            symbol=filters.symbol,
+            period=filters.period,
+            start=filters.start,
+            end=filters.end
+        ))
+        if ohlc_data:
+            return Response(ohlc_data)
         else:
-            stocks = qs
-
-        # If we have any matching stocks in DB and they have OHLC stored, return those ranges first.
-        results: List[Dict[str, Any]] = []
-        for stock in stocks:
-            ohlc_qs = OHLC.objects.filter(stock=stock)
-            if start_dt:
-                ohlc_qs = ohlc_qs.filter(timestamp__gte=start_dt)
-            if end_dt:
-                ohlc_qs = ohlc_qs.filter(timestamp__lte=end_dt)
-            ohlc_qs = ohlc_qs.order_by('timestamp')[:10000]
-            if ohlc_qs.exists():
-                serializer = OHLCSimpleSerializer(ohlc_qs, many=True)
-                results.extend(serializer.data)
-
-        if results:
-            return Response(results)
-
-        # Otherwise, fallback to adapters (live fetch). Use configured datasources matching the stocks or all datasources.
-        adapters: List[BaseAdapter] = []
-        if ds is not None:
-            adapters = [get_adapter_for_datasource(ds)]
-        else:
-            # build adapters for datasources associated with symbol
-            ds_ids = set(s.datasource_id for s in stocks if s.datasource_id)
-            if ds_ids:
-                adapters = [get_adapter_for_datasource(DataSource.objects.get(id=dsid)) for dsid in ds_ids]
-            else:
-                adapters = [get_adapter_for_datasource(ds) for ds in DataSource.objects.filter(enabled=True)]
-
-        # Query adapters in order until we get results
-        for adapter in adapters:
-            try:
-                fetcher = adapter.fetch_ohlc(symbol=symbol, start=start_dt, end=end_dt)
-                for item in fetcher:
-                    # adapter returns dict-like rows; keep them as-is for the API
-                    results.append(item)
-                if results:
-                    return Response(results)
-            except Exception as exc:
-                # log and continue
-                print('adapter error', exc)
-                continue
-
-        return Response({'detail': 'no data found'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'detail': 'no data found'}, 
+                            status=status.HTTP_404_NOT_FOUND)
