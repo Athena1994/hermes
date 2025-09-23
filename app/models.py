@@ -12,14 +12,11 @@ class Symbol:
     metadata: dict[str, Any] = field(default_factory=dict)
 
 class DataSource(models.Model):
-    # type: 'web' or 'csv' or custom
     name = models.CharField(max_length=200)
     type = models.CharField(max_length=50)
     config = models.JSONField(default=dict)
     enabled = models.BooleanField(default=True)
 
-    class Meta:
-        unique_together = ('name', 'type')
 
     def __str__(self):
         return f"{self.name} ({self.type})"
