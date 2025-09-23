@@ -23,7 +23,9 @@ class DataSource(models.Model):
 
 
 class Stock(models.Model):
-    datasource = models.ForeignKey(DataSource, related_name='stocks', on_delete=models.CASCADE)
+    datasource = models.ForeignKey(DataSource, 
+                                   related_name='stocks', 
+                                   on_delete=models.CASCADE)
     symbol = models.CharField(max_length=50)
     name = models.CharField(max_length=200, blank=True)
 
@@ -35,7 +37,9 @@ class Stock(models.Model):
 
 
 class OHLC(models.Model):
-    stock = models.ForeignKey(Stock, related_name='ohlc', on_delete=models.CASCADE)
+    stock = models.ForeignKey(Stock, 
+                              related_name='ohlc', 
+                              on_delete=models.CASCADE)
     timestamp = models.DateTimeField()
     open = models.FloatField()
     high = models.FloatField()

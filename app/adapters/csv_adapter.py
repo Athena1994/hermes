@@ -16,11 +16,17 @@ class CSVAdapter(BaseAdapter):
 
     def list_symbols(self) -> Iterator[Symbol]:
         # For simple CSV files, treat filename as symbol
-        yield {'symbol': os.path.splitext(os.path.basename(self.path))[0], 
-               'name': os.path.basename(self.path)}
+        yield {
+            'symbol': os.path.splitext(os.path.basename(self.path))[0],
+            'name': os.path.basename(self.path),
+        }
 
-    def fetch_ohlc(self, symbol: str, 
-                   start: datetime = None, end: datetime = None) -> Iterator[dict[str]]:
+    def fetch_ohlc(
+        self,
+        symbol: str,
+        start: datetime = None,
+        end: datetime = None,
+    ) -> Iterator[dict[str]]:
         # simple CSV loader; expects columns: timestamp,open,high,low,close,volume
         with open(self.path, 'r', newline='') as fh:
             reader = csv.DictReader(fh)
@@ -32,5 +38,5 @@ class CSVAdapter(BaseAdapter):
                     'high': float(row['high']),
                     'low': float(row['low']),
                     'close': float(row['close']),
-                    'volume': int(row.get('volume') or 0)
+                    'volume': int(row.get('volume') or 0),
                 }

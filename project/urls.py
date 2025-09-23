@@ -9,8 +9,12 @@ router.register(r'stocks', views.StockViewSet)
 
 urlpatterns = [
     path('api/', include(router.urls)),
-    path('api/ohlc/', views.OHLCRangeAPIView.as_view(), name='ohlc-range'),
-    path('api/schema/', SpectacularAPIView.as_view(), name='schema'),
-    path('api/docs/swagger/', SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
-    path('api/docs/redoc/', SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
+    path('api/ohlc/', 
+         views.OHLCRangeAPIView.as_view(), name='ohlc-range'),
+    path('api/schema/', 
+         SpectacularAPIView.as_view(), name='schema'),
+    path('api/docs/swagger/', 
+         SpectacularSwaggerView.as_view(url_name='schema'), name='swagger-ui'),
+    path('api/docs/redoc/', 
+         SpectacularRedocView.as_view(url_name='schema'), name='redoc'),
 ]

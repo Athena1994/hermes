@@ -1,12 +1,14 @@
 # Hermes API
 
-This document describes the HTTP API exposed by the Hermes project (REST Framework).
+This document describes the HTTP API exposed by the Hermes project 
+(REST Framework).
 
 Base path: `/api/`
 
 ## Authentication
 
-No authentication is configured by default. If you enable Django auth or token auth in your deployment, secure endpoints appropriately.
+No authentication is configured by default. If you enable Django auth or token 
+auth in your deployment, secure endpoints appropriately.
 
 ## Endpoints
 
@@ -19,7 +21,8 @@ POST /api/datasources/
 - Create a new data source. JSON body should match the DataSource model fields:
   - name (string)
   - type (string) - e.g. `csv`, `lean`, `web` etc.
-  - config (object) - JSON config passed to adapters, e.g. `{ "path": "rt/mydata.csv" }`
+  - config (object) - JSON config passed to adapters, 
+  e.g. `{ "path": "rt/mydata.csv" }`
   - enabled (boolean)
 
 GET /api/datasources/{id}/

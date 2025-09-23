@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from dataclasses import dataclass
 
 from rest_framework.response import Response
@@ -8,7 +8,7 @@ from rest_framework.views import APIView
 from django.utils.dateparse import parse_datetime
 from django.db.models import Q
 
-from app.adapters.base_adapter import BaseAdapter, Period
+from app.adapters.base_adapter import Period
 from app.adapters.factory import get_adapter_for_datasource
 from app.models import DataSource, Stock
 

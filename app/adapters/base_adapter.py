@@ -5,6 +5,7 @@ from datetime import datetime
 
 from app.models import Symbol
 
+
 class Period(Enum):
     TICK = 'tick'
     ONE_MINUTE = '1m'
@@ -21,13 +22,18 @@ class BaseAdapter(ABC):
 
     @abstractmethod
     def list_symbols(self) -> Iterable[Symbol]:
-        """Return iterable of symbols offered by this datasource."""
+        """Return iterable of symbols offered by this datasource.
+        """
 
     @abstractmethod
-    def fetch_ohlc(self, symbol: str, 
-                   period: Period | str,
-                   start: datetime = None, 
-                   end: datetime = None) -> Iterator[dict[str, Any]]:
-        """Yield OHLC rows as dicts: {timestamp, open, high, low, close, volume} """
+    def fetch_ohlc(
+        self,
+        symbol: str,
+        period: Period | str,
+        start: datetime = None,
+        end: datetime = None,
+    ) -> Iterator[dict[str, Any]]:
+        """Yield OHLC rows as dicts: {timestamp, open, high, low, close, volume}
+        """
 
     
