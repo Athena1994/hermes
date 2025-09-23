@@ -10,7 +10,7 @@ from django.db.models import Q
 
 from .models import DataSource, Stock, OHLC
 from .serializers import DataSourceSerializer, StockSerializer, OHLCSimpleSerializer
-from .adapters import get_adapter_for_datasource, BaseAdapter
+from .adapters.base_adapter import get_adapter_for_datasource, BaseAdapter
 
 
 class DataSourceViewSet(viewsets.ModelViewSet):
@@ -39,13 +39,12 @@ class OHLCRangeAPIView(APIView):
       symbol (required) - stock symbol
       datasource (optional) - datasource name or id
       start, end (optional) - ISO datetimes
-    """
 
     def get(self, request: Request, format: str = None) -> Response:
         symbol = request.query_params.get('symbol')
         if not symbol:
             return Response({'detail': 'symbol is required'}, status=status.HTTP_400_BAD_REQUEST)
-
+    
         datasource_q = request.query_params.get('datasource')
         start = request.query_params.get('start')
         end = request.query_params.get('end')
