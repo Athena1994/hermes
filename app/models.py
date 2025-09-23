@@ -18,6 +18,9 @@ class DataSource(models.Model):
     config = models.JSONField(default=dict)
     enabled = models.BooleanField(default=True)
 
+    class Meta:
+        unique_together = ('name', 'type')
+
     def __str__(self):
         return f"{self.name} ({self.type})"
 
