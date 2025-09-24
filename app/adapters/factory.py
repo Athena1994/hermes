@@ -1,37 +1,34 @@
-from typing import Any, Callable, Dict
 
+from typing import Callable, TYPE_CHECKING, Any
 from app.adapters.base_adapter import BaseAdapter
-from app.models import DataSource
 
-# Registry maps `datasource type`->constructor(config_dict)->adapter
-_REGISTRY: Dict[str, Callable[[Dict[str, Any]], Any]] = {}
+if TYPE_CHECKING:
+    from app.models import DataSource
 
 
-def register_adapter(
-    ds_type: str,
-    ctor: Callable[[Dict[str, Any]], BaseAdapter],
-) -> None:
-    """Register an adapter constructor for a datasource type.
+_REGISTRY: dict[str, Callable[[dict], BaseAdapter]] = {}
 
-    ctor should accept a single argument: the datasource config dict, and
-    return an adapter instance.
-    """
-    if ds_type in _REGISTRY:
+
+def register_adapter(name: str, cstr: Callable) -> None:
+    if name in _REGISTRY:
         raise ValueError(
-            f"Adapter already registered for datasource type '{ds_type}'")
-    _REGISTRY[ds_type] = ctor
+            f"Adapter already registered for datasource '{name}'")
+    _REGISTRY[name] = cstr
 
 
-def get_adapter_for_datasource(ds: DataSource) -> BaseAdapter:
+def get_adapter_for_datasource(ds: Any) -> BaseAdapter:
     """Return an adapter instance for a DataSource-like argument.
 
     If no registered adapter exists for the datasource type, raise a
     ValueError. The caller may choose to handle this and provide a
     fallback.
     """
-    ctor = _REGISTRY.get(ds.type)
+    # Accept any DataSource-like object (duck-typing) to avoid importing
+    # Django models at module import time.
+    name = getattr(ds, 'name', None) or getattr(ds, 'type', None)
+    ctor = _REGISTRY.get(name)
     if not ctor:
         raise ValueError(
-            f"No adapter registered for datasource type '{ds.type}'")
+            f"No adapter registered for datasource '{name}'")
 
     return ctor(ds.config)

@@ -19,6 +19,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'app',
     'stockdata',
+    'polygon',
 ]
 
 MIDDLEWARE = [
@@ -68,3 +69,7 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'OpenAPI schema for Hermes',
     'VERSION': '1.0.0',
 }
+
+# External API keys
+POLYGON_API_KEY = os.getenv('POLYGON_API_KEY')
+POLYGON_API_KEY = 'zKHrJ4EfcIJqkQMuZk3OacUkjjhUgZm0'
